@@ -15,7 +15,7 @@
     <form id="form1" runat="server">
         <div class="auto-style1">
             <br />
-            <asp:Label ID="lbl_display" runat="server" Text="Display"></asp:Label>
+            <asp:Label ID="lbl_welc" runat="server" Font-Bold="True" Font-Names="Arial" Font-Size="X-Large" Text="Welcome"></asp:Label>
             <br />
             <br />
             <asp:Label ID="lblMessage" runat="server"></asp:Label>

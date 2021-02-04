@@ -21,7 +21,8 @@ namespace WebApplication1
         public List<string> ErrorMessage { get; set; }
     }
     public partial class login : System.Web.UI.Page
-    { 
+    {
+        static int counter = 3;
         string MYDBConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["MYDBConnection"].ConnectionString;
 
         protected void Page_Load(object sender, EventArgs e)
@@ -32,47 +33,66 @@ namespace WebApplication1
 
         protected void btnSubmit_Click(object sender, EventArgs e)
         {
-            lbl_comments.Text = HttpUtility.HtmlEncode(tb_email.Text);
-            lbl_comments.Text = HttpUtility.HtmlEncode(tb_pwd.Text);
-            string pwd = tb_pwd.Text.ToString().Trim();
-            string email = tb_email.Text.ToString().Trim();
-
-            SHA512Managed hashing = new SHA512Managed();
-            string dbHash = getDBHash(email);
-            string dbSalt = getDBSalt(email);
-
-            try
+            if (tb_email.Text == "")
             {
-                if (dbSalt != null && dbSalt.Length > 0 && dbHash != null && dbHash.Length > 0)
+                lblMsg.Text += "Email is required!" + "<br/>";
+                lblMsg.ForeColor = System.Drawing.Color.Red;
+            }
+            if (tb_pwd.Text == "")
+            {
+                lblMsg.Text += "Password is required!" + "<br/>";
+                lblMsg.ForeColor = System.Drawing.Color.Red;
+            }
+            else
+            {
+                string pwd = HttpUtility.HtmlEncode(tb_pwd.Text.ToString().Trim());
+                string email = HttpUtility.HtmlEncode(tb_email.Text.ToString().Trim());
+
+                SHA512Managed hashing = new SHA512Managed();
+                string dbHash = getDBHash(email);
+                string dbSalt = getDBSalt(email);
+
+                try
                 {
-                    string pwdWithSalt = pwd + dbSalt;
-                    byte[] hashWithSalt = hashing.ComputeHash(Encoding.UTF8.GetBytes(pwdWithSalt));
-                    string userHash = Convert.ToBase64String(hashWithSalt);
-
-                    if (userHash.Equals(dbHash))
+                    if (dbSalt != null && dbSalt.Length > 0 && dbHash != null && dbHash.Length > 0)
                     {
-                        if (ValidateCaptcha())
-                        {
-                            Session["LoggedIn"] = tb_email.Text.Trim();
-                            string guid = Guid.NewGuid().ToString();
-                            Session["AuthToken"] = guid;
+                        string pwdWithSalt = pwd + dbSalt;
+                        byte[] hashWithSalt = hashing.ComputeHash(Encoding.UTF8.GetBytes(pwdWithSalt));
+                        string userHash = Convert.ToBase64String(hashWithSalt);
+                        if (userHash.Equals(dbHash))
+                        { 
+                            if (ValidateCaptcha())
+                            {
+                                Session["LoggedIn"] = tb_email.Text.Trim();
+                                string guid = Guid.NewGuid().ToString();
+                                Session["AuthToken"] = guid;
 
-                            Response.Cookies.Add(new HttpCookie("AuthToken", guid));
-                            Response.Redirect("Homepage.aspx?Info=" + HttpUtility.UrlEncode(tb_email.Text + tb_pwd.Text), false);
+                                Response.Cookies.Add(new HttpCookie("AuthToken", guid));
+                                Response.Redirect("Homepage.aspx?Info=" + HttpUtility.UrlEncode(tb_email.Text + tb_pwd.Text), false);
+                            }
                         }
                         else
                         {
-                            lblMsg.Text = "Userid or password is not valid. Please try again.";
-                            Response.Redirect("Login.aspx", false);
+                            if (counter == 0)
+                            {
+                                lblMsg.Text = "Your account is locked! Please contact the administrator.";
+                                btnSubmit.Enabled = false;
+                            }
+                            else
+                            {
+                                lblMsg.Text = "Invalid email or password! Your attempts remaining:" + counter;
+                                counter -= 1;
+                                lblMsg.ForeColor = System.Drawing.Color.Red;
+                            }
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+                    throw new Exception(ex.ToString());
+                }
+                finally { }
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.ToString());
-            }
-            finally { }
             
         }
             
@@ -149,7 +169,7 @@ namespace WebApplication1
             bool result = true;
             string captchaResponse = Request.Form["g-recaptcha-response"];
             HttpWebRequest req = (HttpWebRequest)WebRequest.Create
-                (" https://www.google.com/recaptcha/api/siteverify?secret=6LdgV0gaAAAAAI0kVzxi6lUDISye2_PMSVaiJgS9 &response=" + captchaResponse);
+                (" https://www.google.com/recaptcha/api/siteverify?secret=6Lf4n0kaAAAAANeQ6-WbfCcC7MH2-GtmL4i_8VsN &response=" + captchaResponse);
 
             try
             {
@@ -158,7 +178,6 @@ namespace WebApplication1
                     using (StreamReader readStream = new StreamReader(wResponse.GetResponseStream()))
                     {
                         string jsonResponse = readStream.ReadToEnd();
-                        lbl_gScore.Text = jsonResponse.ToString();
 
                         JavaScriptSerializer js = new JavaScriptSerializer();
 

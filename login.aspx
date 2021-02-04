@@ -4,7 +4,7 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
-    <script src="https://www.google.com/recaptcha/api.js"></script>
+    <script src="https://www.google.com/recaptcha/api.js?render=6Lf4n0kaAAAAAFngejpuBK0yHFB8ztm84JJjY329"></script>
     <title>Login Form</title>
     <style type="text/css">
         .auto-style1 {
@@ -15,6 +15,10 @@
 <body>
     <form id="form1" runat="server">
         <div class="auto-style1">
+            <asp:Timer ID="Timer1" runat="server">
+            </asp:Timer>
+            <asp:ScriptManager ID="ScriptManager1" runat="server">
+            </asp:ScriptManager>
             <br />
             <asp:Label ID="Label1" runat="server" Font-Names="Arial" Text="Login" Font-Bold="True" Font-Overline="False" Font-Size="X-Large"></asp:Label>
             <br />
@@ -34,14 +38,18 @@
             <asp:Button ID="btnSubmit" runat="server" OnClick="btnSubmit_Click" Text="Submit" Width="166px" />
             <br />
             <br />
-            <div class="g-recaptcha" data-sitekey="6LdgV0gaAAAAABP_hjB0Qz3mxWLBtHEXBJAP-puN"></div>
+            <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response"/>
             <br />
             <asp:Label ID="lblMsg" runat="server" Font-Names="Arial"></asp:Label>
             <br />
-            <asp:Label ID="lbl_comments" runat="server"></asp:Label>
-            <br />
-            <asp:Label ID="lbl_gScore" runat="server"></asp:Label>
         </div>
     </form>
+    <script>
+        grecaptcha.ready(function () {
+            grecaptcha.execute('6Lf4n0kaAAAAAFngejpuBK0yHFB8ztm84JJjY329', { action: 'Login' }).then(function (token)
+            { document.getElementById("g-recaptcha-response").value = token;
+            });
+        });
+    </script>
 </body>
 </html>
